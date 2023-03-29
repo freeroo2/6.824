@@ -35,29 +35,28 @@ const (
 )
 const (
 	MAPPING StageType = iota
-	MAPPED
 	REDUCING
-	REDUCED
+	STOP
 )
 
 type Coordinator struct {
 	// Your definitions here.
-	lock        sync.Mutex
+	lock        sync.RWMutex
 	stage       StageType
 	nMap        int
 	nReduce     int
-	mapTasks    []*Task
-	reduceTasks []*Task
+	mapTasks    map[int]*Task
+	reduceTasks map[int]*Task
 	todoTasks   chan *Task
 }
 
 type Task struct {
-	taskID         int
-	taskType       TaskType
-	inputFile      string
-	workerID       int
-	nReduce        int
-	distributeTime time.Time
+	taskID    int
+	taskType  TaskType
+	inputFile string
+	workerID  int
+	nReduce   int
+	deadLine  time.Time
 }
 
 //type Worker struct {
@@ -74,9 +73,9 @@ type Task struct {
 //	}
 //}
 
-func NewTask(tastID int, taskType TaskType, inputFile string, nReduce int) *Task {
+func NewTask(taskID int, taskType TaskType, inputFile string, nReduce int) *Task {
 	return &Task{
-		taskID:    tastID,
+		taskID:    taskID,
 		workerID:  -1,
 		taskType:  taskType,
 		inputFile: inputFile,
@@ -97,9 +96,9 @@ func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
 }
 
 func (c *Coordinator) HandleApplyForTask(args *ApplyForTaskArgs, reply *ApplyForTaskReply) error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	log.Printf("receive ask, lastTaskID: %d, type: %s", args.LastTaskID, args.LastTaskType)
 	if args.LastTaskID >= 0 {
+		c.lock.Lock()
 		if args.LastTaskType == MAP {
 			for i := 0; i < c.nReduce; i++ {
 				err := os.Rename(tempMapOutputFile(args.WorkerID, args.LastTaskID, i),
@@ -109,6 +108,7 @@ func (c *Coordinator) HandleApplyForTask(args *ApplyForTaskArgs, reply *ApplyFor
 						tempMapOutputFile(args.WorkerID, args.LastTaskID, i), err)
 				}
 			}
+			delete(c.mapTasks, args.LastTaskID)
 		} else if args.LastTaskType == REDUCE {
 			err := os.Rename(tempReduceOutputFile(args.WorkerID, args.LastTaskID),
 				finalReduceOutputFile(args.LastTaskID))
@@ -116,37 +116,50 @@ func (c *Coordinator) HandleApplyForTask(args *ApplyForTaskArgs, reply *ApplyFor
 				log.Fatalf("Failed to mark reduce output file `%s` as final: %e",
 					tempReduceOutputFile(args.WorkerID, args.LastTaskID), err)
 			}
+			delete(c.reduceTasks, args.LastTaskID)
 		}
+
+		log.Printf("delete task %d, remain tasks: %d", args.LastTaskID, len(c.mapTasks))
+		if len(c.mapTasks) == 0 && c.stage == MAPPING {
+			c.transitFromMapToReduce()
+		} else if len(c.reduceTasks) == 0 && c.stage == REDUCING {
+			c.transitFromReduceToStop()
+		}
+		c.lock.Unlock()
 	}
 
-	switch c.stage {
-	case MAPPING:
-		if len(c.mapTasks) == 0 {
-			c.stage = MAPPED
-		}
-	case MAPPED:
-		c.transitFromMapToReduce()
-	case REDUCING:
-		if len(c.reduceTasks) == 0 {
-			c.stage = REDUCED
-		}
-	case REDUCED:
-		close(c.todoTasks)
-		return nil
-	}
+	//switch c.stage {
+	//case MAPPING:
+	//	if len(c.mapTasks) == 0 {
+	//		c.stage = MAPPED
+	//	}
+	//case MAPPED:
+	//	c.transitFromMapToReduce()
+	//case REDUCING:
+	//	if len(c.reduceTasks) == 0 {
+	//		c.stage = REDUCED
+	//	}
+	//case REDUCED:
+	//	close(c.todoTasks)
+	//	return nil
+	//}
 
 	task, ok := <-c.todoTasks
 	if !ok {
 		return nil
 	}
-	log.Println("拿到任务了")
+
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	reply.TaskID = task.taskID
 	reply.TaskType = task.taskType
+	reply.NMap = c.nMap
 	reply.NReduce = task.nReduce
 	reply.InputFile = task.inputFile
+	reply.WorkerID = args.WorkerID
 
 	task.workerID = args.WorkerID
-	task.distributeTime = time.Now()
+	task.deadLine = time.Now().Add(10 * time.Second)
 	return nil
 }
 
@@ -173,7 +186,9 @@ func (c *Coordinator) server() {
 func (c *Coordinator) Done() bool {
 	ret := false
 	// Your code here.
-	if c.stage == REDUCED {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	if c.stage == STOP {
 		ret = true
 	}
 	return ret
@@ -186,16 +201,18 @@ func (c *Coordinator) Done() bool {
 //
 func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{
-		stage:     MAPPING,
-		nMap:      len(files),
-		nReduce:   nReduce,
-		todoTasks: make(chan *Task, int(math.Max(float64(len(files)), float64(nReduce)))),
+		stage:       MAPPING,
+		nMap:        len(files),
+		nReduce:     nReduce,
+		todoTasks:   make(chan *Task, int(math.Max(float64(len(files)), float64(nReduce)))),
+		mapTasks:    make(map[int]*Task),
+		reduceTasks: make(map[int]*Task),
 	}
 	c.lock.Lock()
 	// Your code here.
 	for i, file := range files {
 		task := NewTask(i, MAP, file, nReduce)
-		c.mapTasks = append(c.mapTasks, task)
+		c.mapTasks[i] = task
 		c.todoTasks <- task
 	}
 	c.lock.Unlock()
@@ -204,39 +221,19 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	return &c
 }
 
-func (c *Coordinator) deleteTask(taskID int, taskType TaskType) {
-	length := len(c.mapTasks)
-	if taskType == MAP {
-		if taskID >= length {
-			return
-		}
-		if taskID == length-1 {
-			c.mapTasks = append(c.mapTasks[:length-1])
-		} else {
-			c.mapTasks = append(c.mapTasks[:taskID], c.mapTasks[taskID+1:]...)
-		}
-	} else if taskType == REDUCE {
-		if taskID >= length {
-			return
-		}
-		if taskID == length-1 {
-			c.reduceTasks = append(c.reduceTasks[:length-1])
-		} else {
-			c.reduceTasks = append(c.reduceTasks[:taskID], c.reduceTasks[taskID+1:]...)
-		}
-	}
-}
-
 func (c *Coordinator) transitFromMapToReduce() {
-	if c.stage != MAPPED {
-		return
-	}
+	log.Println("enter transitFromMapToReduce")
 	for i := 0; i < c.nReduce; i++ {
 		task := NewTask(i, REDUCE, "", c.nReduce)
-		c.reduceTasks = append(c.reduceTasks, task)
+		c.reduceTasks[i] = task
 		c.todoTasks <- task
 	}
 	c.stage = REDUCING
+}
+
+func (c *Coordinator) transitFromReduceToStop() {
+	log.Println("enter transitFromReduceToStop")
+	c.stage = STOP
 }
 
 func tempMapOutputFile(workerID, mapID, reduceID int) string {

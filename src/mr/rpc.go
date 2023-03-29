@@ -34,14 +34,16 @@ type ApplyForTaskArgs struct {
 }
 
 type ApplyForTaskReply struct {
+	WorkerID  int
 	TaskID    int
 	TaskType  TaskType
+	NMap      int
 	NReduce   int
 	InputFile string
 }
 
 func (r ApplyForTaskReply) String() string {
-	return fmt.Sprintf("tastID: %d, taskType: %s, nReduce: %d, inputFile: %s", r.TaskID, r.TaskType, r.NReduce, r.InputFile)
+	return fmt.Sprintf("Worker %d, tastID: %d, taskType: %s, nReduce: %d, inputFile: %s", r.WorkerID, r.TaskID, r.TaskType, r.NReduce, r.InputFile)
 }
 
 // Cook up a unique-ish UNIX-domain socket name
