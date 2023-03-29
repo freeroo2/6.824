@@ -11,7 +11,7 @@ import (
 type logTopic string
 
 const (
-	dClient  logTopic = "CLNT"
+	DClient  logTopic = "CLNT"
 	dCommit  logTopic = "CMIT"
 	dDrop    logTopic = "DROP"
 	dError   logTopic = "ERRO"
@@ -54,6 +54,7 @@ func init() {
 }
 
 func Debug(topic logTopic, format string, a ...interface{}) {
+	debug := 1
 	if debug >= 1 {
 		time := time.Since(debugStart).Microseconds()
 		time /= 100

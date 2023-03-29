@@ -1,6 +1,9 @@
 package mr
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 import "log"
 import "net/rpc"
 import "hash/fnv"
@@ -28,12 +31,52 @@ func ihash(key string) int {
 //
 func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
-
 	// Your worker implementation here.
-
 	// uncomment to send the Example RPC to the coordinator.
-	CallExample()
+	// CallExample()
+	id := os.Getpid()
+	lastTaskID := -1
+	lastTaskType := TaskType("")
+	for true {
+		reply := ApplyForTask(id, lastTaskID, lastTaskType)
+		switch reply.TaskType {
+		case MAP:
+			doMapWork(reply, mapf)
+		case REDUCE:
+			doReduceWork(reply, reducef)
+		case "":
+			goto End
+		}
+		lastTaskID = reply.TaskID
+		lastTaskType = reply.TaskType
+	}
+End:
+	log.Printf("Worker %d 下班了", id)
+}
 
+func ApplyForTask(workerID, lastTaskID int, lastTaskType TaskType) *ApplyForTaskReply {
+	// declare an argument structure.
+	args := ApplyForTaskArgs{}
+
+	// fill in the argument(s).
+	args.WorkerID = workerID
+	args.LastTaskID = lastTaskID
+	args.LastTaskType = lastTaskType
+
+	// declare a reply structure.
+	reply := ApplyForTaskReply{}
+
+	// send the RPC request, wait for the reply.
+	// the "Coordinator.Example" tells the
+	// receiving server that we'd like to call
+	// the Example() method of struct Coordinator.
+	ok := call("Coordinator.HandleApplyForTask", &args, &reply)
+	if ok {
+		fmt.Println(reply.String())
+	} else {
+		fmt.Printf("call failed!\n")
+	}
+	return &reply
 }
 
 //
@@ -73,7 +116,6 @@ func CallExample() {
 func call(rpcname string, args interface{}, reply interface{}) bool {
 	// c, err := rpc.DialHTTP("tcp", "127.0.0.1"+":1234")
 	sockname := coordinatorSock()
-	fmt.Println(sockname)
 	c, err := rpc.DialHTTP("unix", sockname)
 	if err != nil {
 		log.Fatal("dialing:", err)
@@ -84,7 +126,14 @@ func call(rpcname string, args interface{}, reply interface{}) bool {
 	if err == nil {
 		return true
 	}
-
 	fmt.Println(err)
 	return false
+}
+
+func doMapWork(reply *ApplyForTaskReply, mapf func(string, string) []KeyValue) {
+	log.Printf("do map work %d", reply.TaskID)
+}
+
+func doReduceWork(reply *ApplyForTaskReply, reducef func(string, []string) string) {
+	log.Printf("do reduce work %d", reply.TaskID)
 }

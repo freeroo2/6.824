@@ -6,7 +6,10 @@ package mr
 // remember to capitalize all names.
 //
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 import "strconv"
 
 //
@@ -24,6 +27,22 @@ type ExampleReply struct {
 
 // Add your RPC definitions here.
 
+type ApplyForTaskArgs struct {
+	WorkerID     int
+	LastTaskID   int
+	LastTaskType TaskType
+}
+
+type ApplyForTaskReply struct {
+	TaskID    int
+	TaskType  TaskType
+	NReduce   int
+	InputFile string
+}
+
+func (r ApplyForTaskReply) String() string {
+	return fmt.Sprintf("tastID: %d, taskType: %s, nReduce: %d, inputFile: %s", r.TaskID, r.TaskType, r.NReduce, r.InputFile)
+}
 
 // Cook up a unique-ish UNIX-domain socket name
 // in /var/tmp, for the coordinator.
