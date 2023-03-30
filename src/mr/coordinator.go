@@ -96,7 +96,7 @@ func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
 }
 
 func (c *Coordinator) HandleApplyForTask(args *ApplyForTaskArgs, reply *ApplyForTaskReply) error {
-	log.Printf("receive ask, lastTaskID: %d, type: %s", args.LastTaskID, args.LastTaskType)
+	// log.Printf("receive ask, lastTaskID: %d, type: %s", args.LastTaskID, args.LastTaskType)
 	if args.LastTaskID >= 0 {
 		c.lock.Lock()
 		if args.LastTaskType == MAP {
@@ -119,7 +119,7 @@ func (c *Coordinator) HandleApplyForTask(args *ApplyForTaskArgs, reply *ApplyFor
 			delete(c.reduceTasks, args.LastTaskID)
 		}
 
-		log.Printf("delete task %d, remain tasks: %d", args.LastTaskID, len(c.mapTasks))
+		// log.Printf("delete task %d, remain tasks: %d", args.LastTaskID, len(c.mapTasks))
 		if len(c.mapTasks) == 0 && c.stage == MAPPING {
 			c.transitFromMapToReduce()
 		} else if len(c.reduceTasks) == 0 && c.stage == REDUCING {
@@ -127,22 +127,6 @@ func (c *Coordinator) HandleApplyForTask(args *ApplyForTaskArgs, reply *ApplyFor
 		}
 		c.lock.Unlock()
 	}
-
-	//switch c.stage {
-	//case MAPPING:
-	//	if len(c.mapTasks) == 0 {
-	//		c.stage = MAPPED
-	//	}
-	//case MAPPED:
-	//	c.transitFromMapToReduce()
-	//case REDUCING:
-	//	if len(c.reduceTasks) == 0 {
-	//		c.stage = REDUCED
-	//	}
-	//case REDUCED:
-	//	close(c.todoTasks)
-	//	return nil
-	//}
 
 	task, ok := <-c.todoTasks
 	if !ok {
@@ -160,6 +144,7 @@ func (c *Coordinator) HandleApplyForTask(args *ApplyForTaskArgs, reply *ApplyFor
 
 	task.workerID = args.WorkerID
 	task.deadLine = time.Now().Add(10 * time.Second)
+
 	return nil
 }
 
@@ -178,6 +163,18 @@ func (c *Coordinator) server() {
 	}
 	go http.Serve(l, nil)
 }
+
+//func (c *Coordinator) stop() {
+//	select {
+//	case <-c.closed:
+//		return
+//	default:
+//		close(c.closed)
+//	}
+//	c.waitForQuit.Wait()
+//	close(c.todoTasks)
+//	return
+//}
 
 //
 // main/mrcoordinator.go calls Done() periodically to find out
@@ -207,6 +204,7 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 		todoTasks:   make(chan *Task, int(math.Max(float64(len(files)), float64(nReduce)))),
 		mapTasks:    make(map[int]*Task),
 		reduceTasks: make(map[int]*Task),
+		// closed:      make(chan struct{}),
 	}
 	c.lock.Lock()
 	// Your code here.
@@ -217,12 +215,37 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	}
 	c.lock.Unlock()
 	c.server()
-	// todo
+	go func() {
+		for {
+			time.Sleep(500 * time.Millisecond)
+			c.lock.Lock()
+			if c.stage == MAPPING {
+				for _, task := range c.mapTasks {
+					if task.workerID != -1 && !task.deadLine.IsZero() {
+						if time.Now().After(task.deadLine) {
+							task.workerID = -1
+							c.todoTasks <- task
+						}
+					}
+				}
+			} else if c.stage == REDUCING {
+				for _, task := range c.reduceTasks {
+					if task.workerID != -1 && !task.deadLine.IsZero() {
+						if time.Now().After(task.deadLine) {
+							task.workerID = -1
+							c.todoTasks <- task
+						}
+					}
+				}
+			}
+			c.lock.Unlock()
+		}
+	}()
 	return &c
 }
 
 func (c *Coordinator) transitFromMapToReduce() {
-	log.Println("enter transitFromMapToReduce")
+	// log.Println("enter transitFromMapToReduce")
 	for i := 0; i < c.nReduce; i++ {
 		task := NewTask(i, REDUCE, "", c.nReduce)
 		c.reduceTasks[i] = task

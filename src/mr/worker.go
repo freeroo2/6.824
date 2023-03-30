@@ -60,10 +60,10 @@ func Worker(mapf func(string, string) []KeyValue,
 		}
 		lastTaskID = reply.TaskID
 		lastTaskType = reply.TaskType
-		log.Printf("Worker %v finish map work %v\n", reply.WorkerID, reply.TaskID)
+		// log.Printf("Worker %v finish map work %v\n", reply.WorkerID, reply.TaskID)
 	}
 End:
-	log.Printf("Worker %d 下班了", id)
+	// log.Printf("Worker %d 下班了", id)
 }
 
 func ApplyForTask(workerID, lastTaskID int, lastTaskType TaskType) *ApplyForTaskReply {
@@ -84,7 +84,7 @@ func ApplyForTask(workerID, lastTaskID int, lastTaskType TaskType) *ApplyForTask
 	// the Example() method of struct Coordinator.
 	ok := call("Coordinator.HandleApplyForTask", &args, &reply)
 	if ok {
-		fmt.Println(reply.String())
+		// fmt.Println(reply.String())
 	} else {
 		fmt.Printf("call failed!\n")
 	}
@@ -116,7 +116,7 @@ func CallExample() {
 		// reply.Y should be 100.
 		fmt.Printf("reply.Y %v\n", reply.Y)
 	} else {
-		fmt.Printf("call failed!\n")
+		//fmt.Printf("call failed!\n")
 	}
 }
 
@@ -143,7 +143,7 @@ func call(rpcname string, args interface{}, reply interface{}) bool {
 }
 
 func doMapWork(reply *ApplyForTaskReply, mapf func(string, string) []KeyValue) {
-	log.Printf("do map work %d", reply.TaskID)
+	// log.Printf("do map work %d", reply.TaskID)
 	file, err := os.Open(reply.InputFile)
 	defer file.Close()
 	if err != nil {
@@ -171,7 +171,7 @@ func doMapWork(reply *ApplyForTaskReply, mapf func(string, string) []KeyValue) {
 }
 
 func doReduceWork(reply *ApplyForTaskReply, reducef func(string, []string) string) {
-	log.Printf("do reduce work %d", reply.TaskID)
+	// log.Printf("do reduce work %d", reply.TaskID)
 	var intermediate []string
 	for i := 0; i < reply.NMap; i++ {
 		filename := fmt.Sprintf("tmp-%d-%d", i, reply.TaskID)
