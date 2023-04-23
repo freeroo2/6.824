@@ -201,7 +201,7 @@ func (rf *Raft) ticker() {
 		// be started and to randomize sleeping time using
 		// time.Sleep().
 		// 如果是leader，就发送心跳消息；如果不是leader并超过timeout，就成为候选人发起选举
-		// election timeout set to 500ms~700ms
+		// election timeout set to 200ms~400ms
 		time.Sleep(rf.heartBeat)
 		rf.mu.Lock()
 		if rf.status == LEADER {
@@ -211,35 +211,6 @@ func (rf *Raft) ticker() {
 			rf.leaderElection()
 		}
 		rf.mu.Unlock()
-	}
-}
-
-func (rf *Raft) leaderAppendEntries(isHeartbeat bool) {
-	lastLog := rf.log.lastLog()
-	for peerID, _ := range rf.peers {
-		if peerID == rf.me {
-			rf.ResetElectionTimeOut()
-			continue
-		}
-
-		if lastLog.Index >= rf.nextIndex[peerID] || isHeartbeat {
-			nextIndex := rf.nextIndex[peerID]
-			if nextIndex <= 0 {
-				nextIndex = 1
-			}
-			if lastLog.Index+1 < nextIndex {
-				nextIndex = lastLog.Index
-			}
-			prevLog := rf.log.at(nextIndex - 1)
-			args := AppendEntriesArgs{
-				Term:         rf.currentTerm,
-				LeaderId:     rf.me,
-				PrevLogIndex: prevLog.Index,
-			}
-
-			args.PrevLogTerm = rf.log.lastLog().Term
-			args.LeaderCommit = rf.commitIndex
-		}
 	}
 }
 

@@ -1,6 +1,10 @@
 package raft
 
-import "sync"
+import (
+	"fmt"
+	"strings"
+	"sync"
+)
 
 type Entry struct {
 	Command interface{}
@@ -44,4 +48,16 @@ func (log *Log) slice(index int) []*Entry {
 	log.Lock()
 	defer log.Unlock()
 	return log.Entries[index:]
+}
+
+func (e *Entry) String() string {
+	return fmt.Sprint(e.Term)
+}
+
+func (log *Log) String() string {
+	nums := []string{}
+	for _, entry := range log.Entries {
+		nums = append(nums, fmt.Sprintf("%4d", entry.Term))
+	}
+	return fmt.Sprint(strings.Join(nums, "|"))
 }

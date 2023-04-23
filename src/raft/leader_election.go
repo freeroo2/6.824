@@ -2,7 +2,6 @@ package raft
 
 import (
 	"sync"
-	"sync/atomic"
 
 	"6.824/logger"
 )
@@ -13,35 +12,6 @@ func (rf *Raft) setNewTerm(newTerm int) {
 		rf.status = FOLLOWER
 		rf.votedFor = -1
 		logger.PrettyDebug(logger.DTerm, "S%d, set new term %d", rf.me, newTerm)
-	}
-}
-
-func (rf *Raft) candidateRequestVote(serverID int, args *RequestVoteArgs, votesCount *int64, becomesLeader *sync.Once) {
-	var reply RequestVoteReply
-	ok := rf.sendRequestVote(serverID, args, &reply)
-	if !ok {
-		return
-	}
-	if reply.Term > args.Term {
-		rf.setNewTerm(reply.Term)
-		return
-	}
-	if reply.Term < args.Term {
-		return
-	}
-	atomic.AddInt64(votesCount, 1)
-	n := len(rf.peers)
-	if *votesCount > int64(n/2) {
-		becomesLeader.Do(func() {
-			rf.status = LEADER
-			logger.PrettyDebug(logger.DLeader, "S%d, come to power, start to send heartbeat", rf.me)
-			//rf.ResetElectionTimeOut()
-			for i := 0; i < n; i++ {
-				rf.nextIndex[i] = rf.log.lastLog().Index + 1
-				rf.matchIndex[i] = 0
-			}
-			rf.leaderAppendEntries(true)
-		})
 	}
 }
 
