@@ -49,29 +49,6 @@ type ApplyMsg struct {
 	SnapshotIndex int
 }
 
-type Entry struct {
-	Command interface{}
-	Term    int
-	Index   int
-}
-
-type Log struct {
-	sync.Mutex
-	Entries []*Entry
-}
-
-func (log *Log) lastLog() *Entry {
-	log.Lock()
-	defer log.Unlock()
-	return log.Entries[len(log.Entries)-1]
-}
-
-func (log *Log) append(e *Entry) {
-	log.Lock()
-	defer log.Unlock()
-	log.Entries = append(log.Entries, e)
-}
-
 type PeerStatus int
 
 const (
@@ -166,87 +143,6 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 
 }
 
-// example RequestVote RPC arguments structure.
-// field names must start with capital letters!
-type RequestVoteArgs struct {
-	// Your data here (2A, 2B).
-	Term         int
-	CandidateId  int
-	LastLogIndex int
-	LastLogTerm  int
-}
-
-// example RequestVote RPC reply structure.
-// field names must start with capital letters!
-type RequestVoteReply struct {
-	// Your data here (2A).
-	Term        int
-	VoteGranted bool
-}
-
-type AppendEntriesArgs struct {
-	// Your data here (2A, 2B).
-	Term         int
-	LeaderId     int
-	PrevLogIndex int
-	PrevLogTerm  int
-	Entries      []*Entry
-	LeaderCommit int
-}
-
-type AppendEntriesReply struct {
-	// Your data here (2A).
-	Term    int
-	Success bool
-}
-
-// example RequestVote RPC handler.
-func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
-	// Your code here (2A, 2B).
-}
-
-// example AppendEntries RPC handler.
-func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
-	// Your code here (2A, 2B).
-}
-
-// example code to send a RequestVote RPC to a server.
-// server is the index of the target server in rf.peers[].
-// expects RPC arguments in args.
-// fills in *reply with RPC reply, so caller should
-// pass &reply.
-// the types of the args and reply passed to Call() must be
-// the same as the types of the arguments declared in the
-// handler function (including whether they are pointers).
-//
-// The labrpc package simulates a lossy network, in which servers
-// may be unreachable, and in which requests and replies may be lost.
-// Call() sends a request and waits for a reply. If a reply arrives
-// within a timeout interval, Call() returns true; otherwise
-// Call() returns false. Thus Call() may not return for a while.
-// A false return can be caused by a dead server, a live server that
-// can't be reached, a lost request, or a lost reply.
-//
-// Call() is guaranteed to return (perhaps after a delay) *except* if the
-// handler function on the server side does not return.  Thus there
-// is no need to implement your own timeouts around Call().
-//
-// look at the comments in ../labrpc/labrpc.go for more details.
-//
-// if you're having trouble getting RPC to work, check that you've
-// capitalized all field names in structs passed over RPC, and
-// that the caller passes the address of the reply struct with &, not
-// the struct itself.
-func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
-	ok := rf.peers[server].Call("Raft.RequestVote", args, reply)
-	return ok
-}
-
-func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
-	ok := rf.peers[server].Call("Raft.AppendEntries", args, reply)
-	return ok
-}
-
 // the service using Raft (e.g. a k/v server) wants to start
 // agreement on the next command to be appended to Raft's log. if this
 // server isn't the leader, returns false. otherwise start the
@@ -319,7 +215,32 @@ func (rf *Raft) ticker() {
 }
 
 func (rf *Raft) leaderAppendEntries(isHeartbeat bool) {
+	lastLog := rf.log.lastLog()
+	for peerID, _ := range rf.peers {
+		if peerID == rf.me {
+			rf.ResetElectionTimeOut()
+			continue
+		}
 
+		if lastLog.Index >= rf.nextIndex[peerID] || isHeartbeat {
+			nextIndex := rf.nextIndex[peerID]
+			if nextIndex <= 0 {
+				nextIndex = 1
+			}
+			if lastLog.Index+1 < nextIndex {
+				nextIndex = lastLog.Index
+			}
+			prevLog := rf.log.at(nextIndex - 1)
+			args := AppendEntriesArgs{
+				Term:         rf.currentTerm,
+				LeaderId:     rf.me,
+				PrevLogIndex: prevLog.Index,
+			}
+
+			args.PrevLogTerm = rf.log.lastLog().Term
+			args.LeaderCommit = rf.commitIndex
+		}
+	}
 }
 
 // the service or tester wants to create a Raft server. the ports
@@ -339,12 +260,17 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here (2A, 2B, 2C).
-	rf.log.append(nil)
+	rf.log = &Log{Entries: make([]*Entry, 1)}
+	rf.log.append(&Entry{
+		Command: nil,
+		Term:    0,
+		Index:   0,
+	})
 	rf.currentTerm = 0
-	rf.commitIndex = 0 // initialized to 0
-	rf.lastApplied = 0 // initialized to 0
-	// nextIndex   []int    // initialized to leader last log index + 1
-	// matchIndex  []int    // initialized to 0
+	rf.commitIndex = 0                         // initialized to 0
+	rf.lastApplied = 0                         // initialized to 0
+	rf.nextIndex = make([]int, len(rf.peers))  // initialized to leader last log index + 1
+	rf.matchIndex = make([]int, len(rf.peers)) // initialized to 0
 	rf.applyCh = applyCh
 	rf.heartBeat = 100 * time.Millisecond
 	rf.ResetElectionTimeOut()
@@ -353,6 +279,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// start ticker goroutine to start elections
 	go rf.ticker()
-
+	// logger.PrettyDebug(logger.DLog, "S%d, after make", rf.me)
 	return rf
 }
