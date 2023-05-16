@@ -19,13 +19,16 @@ package raft
 
 import (
 	//	"bytes"
-	"math/rand"
+
+	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	//	"6.824/labgob"
 	"6.824/labrpc"
+	"6.824/logger"
 )
 
 // as each Raft peer becomes aware that successive log entries are
@@ -79,15 +82,19 @@ type Raft struct {
 	nextIndex       []int // initialized to leader last log index + 1
 	matchIndex      []int // initialized to 0
 	applyCh         chan ApplyMsg
+	applyCond       *sync.Cond
 }
 
 // return currentTerm and whether this server
 // believes it is the leader.
 func (rf *Raft) GetState() (int, bool) {
-
 	var term int
 	var isleader bool
 	// Your code here (2A).
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	term = rf.currentTerm
+	isleader = rf.status == LEADER
 	return term, isleader
 }
 
@@ -161,7 +168,24 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	isLeader := true
 
 	// Your code here (2B).
-
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if rf.status == LEADER {
+		index = rf.log.lastLog().Index + 1
+		term = rf.currentTerm
+		isLeader = true
+		entry := &Entry{
+			Command: command,
+			Term:    term,
+			Index:   index,
+		}
+		rf.log.append(entry)
+		logger.PrettyDebug(logger.DLeader, "S%v: leader append entries %#v", rf.me, entry)
+		rf.leaderAppendEntries(false)
+		return index, term, isLeader
+	}
+	term = rf.currentTerm
+	isLeader = false
 	return index, term, isLeader
 }
 
@@ -184,19 +208,14 @@ func (rf *Raft) killed() bool {
 	return z == 1
 }
 
-func getRand(server int64) int {
-	rand.Seed(time.Now().Unix() + server)
-	return rand.Intn(200)
-}
-
 func (rf *Raft) ResetElectionTimeOut() {
-	rf.electionTimeOut = time.Now().Add(time.Duration((getRand(int64(rf.me)) + 200)) * time.Millisecond)
+	rf.electionTimeOut = time.Now().Add(time.Duration((GetRand(int64(rf.me)) + 150)) * time.Millisecond)
 }
 
 // The ticker go routine starts a new election if this peer hasn't received
 // heartsbeats recently.
 func (rf *Raft) ticker() {
-	for rf.killed() == false {
+	for !rf.killed() {
 		// Your code here to check if a leader election should
 		// be started and to randomize sleeping time using
 		// time.Sleep().
@@ -219,7 +238,7 @@ func (rf *Raft) ticker() {
 // server's port is peers[me]. all the servers' peers[] arrays
 // have the same order. persister is a place for this server to
 // save its persistent state, and also initially holds the most
-// recent saved state, if any. applyCh is a channel on which the
+// recent saved state, if any. applyCh is a channel on which  the
 // tester or service expects Raft to send ApplyMsg messages.
 // Make() must return quickly, so it should start goroutines
 // for any long-running work.
@@ -231,19 +250,22 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here (2A, 2B, 2C).
-	rf.log = &Log{Entries: make([]*Entry, 1)}
+	rf.log = &Log{Entries: make([]*Entry, 0)}
 	rf.log.append(&Entry{
-		Command: nil,
+		Command: -1,
 		Term:    0,
 		Index:   0,
 	})
+	rf.status = FOLLOWER
 	rf.currentTerm = 0
+	rf.votedFor = -1
 	rf.commitIndex = 0                         // initialized to 0
 	rf.lastApplied = 0                         // initialized to 0
 	rf.nextIndex = make([]int, len(rf.peers))  // initialized to leader last log index + 1
 	rf.matchIndex = make([]int, len(rf.peers)) // initialized to 0
 	rf.applyCh = applyCh
 	rf.heartBeat = 100 * time.Millisecond
+	rf.applyCond = sync.NewCond(&rf.mu)
 	rf.ResetElectionTimeOut()
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
@@ -251,5 +273,42 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// start ticker goroutine to start elections
 	go rf.ticker()
 	// logger.PrettyDebug(logger.DLog, "S%d, after make", rf.me)
+	go rf.applier()
 	return rf
+}
+
+func (rf *Raft) apply() {
+	rf.applyCond.Broadcast()
+	logger.PrettyDebug(logger.DCommit, "S%d, rf.applyCond.Broadcast()", rf.me)
+}
+
+func (rf *Raft) applier() {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	// all servers rule 1
+	for !rf.killed() {
+		if rf.commitIndex > rf.lastApplied && rf.log.lastLog().Index > rf.lastApplied {
+			rf.lastApplied++
+			applyMsg := ApplyMsg{
+				CommandValid: true,
+				CommandIndex: rf.lastApplied,
+				Command:      rf.log.at(rf.lastApplied).Command,
+			}
+			logger.PrettyDebug(logger.DCommit, "S%d, COMMIT %d: %v", rf.me, rf.lastApplied, rf.commits())
+			rf.mu.Unlock()
+			rf.applyCh <- applyMsg
+			rf.mu.Lock()
+		} else {
+			rf.applyCond.Wait()
+			logger.PrettyDebug(logger.DCommit, "S%d, rf.applyCond.Wait()", rf.me)
+		}
+	}
+}
+
+func (rf *Raft) commits() string {
+	nums := []string{}
+	for i := 0; i <= rf.lastApplied; i++ {
+		nums = append(nums, fmt.Sprintf("%4d", rf.log.at(i).Command))
+	}
+	return fmt.Sprint(strings.Join(nums, "|"))
 }

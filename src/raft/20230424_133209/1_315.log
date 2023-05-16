@@ -1,0 +1,606 @@
+Test (2C): basic persistence ...
+002009 INFO S1: start leader election, term 1
+002010 VOTE S1: term 1 send vote request to 2
+002010 VOTE S1: term 1 send vote request to 0
+002012 TERM S2: set new term 1
+002012 TERM S0: set new term 1
+002012 VOTE S2: term 1 vote 1
+002013 VOTE S0: term 1 vote 1
+002013 VOTE S1: reply from 0, term一致，且投给1
+002013 LEAD S1: come to power, start to send heartbeat
+002013 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+002014 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+002014 VOTE S1: reply from 2, term一致，且投给1
+002016 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+002016 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+002017 LEAD S1: 0 append success next 1 match 0
+002017 LEAD S1: 2 append success next 1 match 0
+003013 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+003014 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+003014 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+003015 LEAD S1: 2 append success next 1 match 0
+003015 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+003015 LEAD S1: 0 append success next 1 match 0
+004020 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+004021 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+004022 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+004022 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+004023 LEAD S1: 2 append success next 1 match 0
+004023 LEAD S1: 0 append success next 1 match 0
+005026 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+005026 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+005027 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+005027 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+005027 LEAD S1: 0 append success next 1 match 0
+005028 LEAD S1: 2 append success next 1 match 0
+006029 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+006029 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+006030 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+006030 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+006030 LEAD S1: 0 append success next 1 match 0
+006030 LEAD S1: 2 append success next 1 match 0
+007032 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+007033 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+007034 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+007034 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+007035 LEAD S1: 2 append success next 1 match 0
+007035 LEAD S1: 0 append success next 1 match 0
+008038 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+008039 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+008039 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+008040 LEAD S1: 2 append success next 1 match 0
+008041 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+008042 LEAD S1: 0 append success next 1 match 0
+009041 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+009041 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+009042 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+009042 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+009042 LEAD S1: 0 append success next 1 match 0
+009043 LEAD S1: 2 append success next 1 match 0
+010046 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+010046 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+010046 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+010047 LEAD S1: 2 append success next 1 match 0
+010047 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+010047 LEAD S1: 0 append success next 1 match 0
+011050 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+011050 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+011051 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+011051 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+011051 LEAD S1: 2 append success next 1 match 0
+011052 LEAD S1: 0 append success next 1 match 0
+012054 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+012055 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+012057 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+012057 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+012058 LEAD S1: 0 append success next 1 match 0
+012058 LEAD S1: 2 append success next 1 match 0
+013060 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+013061 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+013062 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+013062 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+013062 LEAD S1: 2 append success next 1 match 0
+013063 LEAD S1: 0 append success next 1 match 0
+014067 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+014068 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+014070 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+014071 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+014071 LEAD S1: 2 append success next 1 match 0
+014072 LEAD S1: 0 append success next 1 match 0
+015074 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+015074 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+015077 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+015078 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+015079 LEAD S1: 2 append success next 1 match 0
+015081 LEAD S1: 0 append success next 1 match 0
+016080 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+016080 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+016081 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+016081 LEAD S1: 2 append success next 1 match 0
+016081 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+016082 LEAD S1: 0 append success next 1 match 0
+017084 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+017084 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+017085 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+017085 LEAD S1: 2 append success next 1 match 0
+017086 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+017086 LEAD S1: 0 append success next 1 match 0
+018089 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+018090 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+018091 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+018092 LEAD S1: 2 append success next 1 match 0
+018093 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+018094 LEAD S1: 0 append success next 1 match 0
+019094 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+019094 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+019095 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+019096 LEAD S1: 2 append success next 1 match 0
+019096 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+019096 LEAD S1: 0 append success next 1 match 0
+020097 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+020097 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+020098 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+020098 LEAD S1: 2 append success next 1 match 0
+020098 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+020099 LEAD S1: 0 append success next 1 match 0
+021102 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+021102 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+021103 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+021104 LEAD S1: 2 append success next 1 match 0
+021104 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+021104 LEAD S1: 0 append success next 1 match 0
+022105 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+022105 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+022107 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+022108 LEAD S1: 2 append success next 1 match 0
+022108 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+022110 LEAD S1: 0 append success next 1 match 0
+023110 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+023111 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+023112 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+023113 LEAD S1: 2 append success next 1 match 0
+023114 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+023116 LEAD S1: 0 append success next 1 match 0
+024116 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+024117 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+024118 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+024118 LEAD S1: 2 append success next 1 match 0
+024118 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+024118 LEAD S1: 0 append success next 1 match 0
+025119 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+025120 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+025120 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+025121 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+025121 LEAD S1: 2 append success next 1 match 0
+025121 LEAD S1: 0 append success next 1 match 0
+026123 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+026123 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+026124 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+026124 LEAD S1: 2 append success next 1 match 0
+026124 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+026125 LEAD S1: 0 append success next 1 match 0
+027126 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+027127 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+027127 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+027128 LEAD S1: 2 append success next 1 match 0
+027128 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+027128 LEAD S1: 0 append success next 1 match 0
+028132 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+028133 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+028133 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+028134 LEAD S1: 2 append success next 1 match 0
+028134 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+028134 LEAD S1: 0 append success next 1 match 0
+029137 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+029137 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+029138 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+029138 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+029139 LEAD S1: 2 append success next 1 match 0
+029139 LEAD S1: 0 append success next 1 match 0
+030141 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+030141 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+030142 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+030142 LEAD S1: 2 append success next 1 match 0
+030142 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+030143 LEAD S1: 0 append success next 1 match 0
+031144 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+031144 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+031145 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+031145 LEAD S1: 2 append success next 1 match 0
+031145 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+031146 LEAD S1: 0 append success next 1 match 0
+032147 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+032147 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+032148 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+032148 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+032148 LEAD S1: 0 append success next 1 match 0
+032148 LEAD S1: 2 append success next 1 match 0
+033151 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+033151 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+033152 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+033152 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+033153 LEAD S1: 2 append success next 1 match 0
+033153 LEAD S1: 0 append success next 1 match 0
+034155 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+034155 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+034156 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+034156 LEAD S1: 2 append success next 1 match 0
+034156 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+034157 LEAD S1: 0 append success next 1 match 0
+035158 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+035158 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+035159 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+035159 LEAD S1: 2 append success next 1 match 0
+035159 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+035160 LEAD S1: 0 append success next 1 match 0
+036162 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+036163 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+036163 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+036163 LEAD S1: 2 append success next 1 match 0
+036164 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+036164 LEAD S1: 0 append success next 1 match 0
+037168 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+037169 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+037170 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+037171 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+037171 LEAD S1: 2 append success next 1 match 0
+037172 LEAD S1: 0 append success next 1 match 0
+038174 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+038174 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+038175 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+038175 LEAD S1: 2 append success next 1 match 0
+038175 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+038176 LEAD S1: 0 append success next 1 match 0
+039178 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+039178 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+039179 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+039179 LEAD S1: 2 append success next 1 match 0
+039180 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+039180 LEAD S1: 0 append success next 1 match 0
+040183 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+040183 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+040184 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+040184 LEAD S1: 2 append success next 1 match 0
+040184 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+040184 LEAD S1: 0 append success next 1 match 0
+041186 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+041186 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+041187 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+041187 LEAD S1: 2 append success next 1 match 0
+041188 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+041188 LEAD S1: 0 append success next 1 match 0
+042189 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+042189 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+042190 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+042190 LEAD S1: 2 append success next 1 match 0
+042191 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+042191 LEAD S1: 0 append success next 1 match 0
+043193 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+043193 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+043194 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+043195 LEAD S1: 2 append success next 1 match 0
+043195 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+043195 LEAD S1: 0 append success next 1 match 0
+044197 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+044197 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+044198 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+044198 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+044198 LEAD S1: 2 append success next 1 match 0
+044198 LEAD S1: 0 append success next 1 match 0
+045200 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+045200 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+045201 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+045201 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+045201 LEAD S1: 0 append success next 1 match 0
+045201 LEAD S1: 2 append success next 1 match 0
+046203 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+046204 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+046204 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+046205 LEAD S1: 2 append success next 1 match 0
+046205 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+046206 LEAD S1: 0 append success next 1 match 0
+047207 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+047207 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+047208 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+047208 LEAD S1: 2 append success next 1 match 0
+047208 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+047209 LEAD S1: 0 append success next 1 match 0
+048210 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+048210 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+048211 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+048211 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+048211 LEAD S1: 2 append success next 1 match 0
+048212 LEAD S1: 0 append success next 1 match 0
+049213 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+049213 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+049214 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+049214 LEAD S1: 2 append success next 1 match 0
+049215 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+049215 LEAD S1: 0 append success next 1 match 0
+050219 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+050220 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+050223 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+050225 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+050225 LEAD S1: 2 append success next 1 match 0
+050227 LEAD S1: 0 append success next 1 match 0
+051221 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+051221 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+051222 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+051223 LEAD S1: 2 append success next 1 match 0
+051223 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+051223 LEAD S1: 0 append success next 1 match 0
+052225 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+052226 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+052227 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+052227 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+052227 LEAD S1: 2 append success next 1 match 0
+052227 LEAD S1: 0 append success next 1 match 0
+053233 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+053234 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+053235 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+053236 LEAD S1: 2 append success next 1 match 0
+053236 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+053237 LEAD S1: 0 append success next 1 match 0
+054235 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+054235 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+054236 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+054236 LEAD S1: 2 append success next 1 match 0
+054237 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+054237 LEAD S1: 0 append success next 1 match 0
+055239 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+055239 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+055240 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+055240 LEAD S1: 2 append success next 1 match 0
+055240 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+055241 LEAD S1: 0 append success next 1 match 0
+056242 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+056243 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+056243 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+056244 LEAD S1: 2 append success next 1 match 0
+056244 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+056244 LEAD S1: 0 append success next 1 match 0
+057246 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+057246 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+057246 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+057247 LEAD S1: 2 append success next 1 match 0
+057247 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+057248 LEAD S1: 0 append success next 1 match 0
+058249 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+058249 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+058250 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+058250 LEAD S1: 2 append success next 1 match 0
+058250 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+058251 LEAD S1: 0 append success next 1 match 0
+059253 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+059253 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+059254 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+059254 LEAD S1: 2 append success next 1 match 0
+059254 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+059255 LEAD S1: 0 append success next 1 match 0
+060257 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+060257 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+060258 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+060258 LEAD S1: 2 append success next 1 match 0
+060258 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+060259 LEAD S1: 0 append success next 1 match 0
+061260 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+061260 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+061261 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+061262 LEAD S1: 2 append success next 1 match 0
+061262 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+061262 LEAD S1: 0 append success next 1 match 0
+062264 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+062264 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+062265 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+062265 LEAD S1: 2 append success next 1 match 0
+062265 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+062266 LEAD S1: 0 append success next 1 match 0
+063272 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+063274 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+063278 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+063278 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+063279 LEAD S1: 0 append success next 1 match 0
+063280 LEAD S1: 2 append success next 1 match 0
+064280 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+064281 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+064281 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+064282 LEAD S1: 2 append success next 1 match 0
+064282 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+064282 LEAD S1: 0 append success next 1 match 0
+065284 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+065284 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+065285 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+065285 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+065285 LEAD S1: 0 append success next 1 match 0
+065286 LEAD S1: 2 append success next 1 match 0
+066288 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+066288 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+066289 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+066290 LEAD S1: 2 append success next 1 match 0
+066290 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+066290 LEAD S1: 0 append success next 1 match 0
+067292 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+067293 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+067293 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+067294 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+067294 LEAD S1: 0 append success next 1 match 0
+067296 LEAD S1: 2 append success next 1 match 0
+068296 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+068297 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+068300 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+068302 LEAD S1: 2 append success next 1 match 0
+068302 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+068304 LEAD S1: 0 append success next 1 match 0
+069301 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+069302 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+069302 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+069303 LEAD S1: 2 append success next 1 match 0
+069303 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+069303 LEAD S1: 0 append success next 1 match 0
+070306 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+070307 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+070307 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+070308 LEAD S1: 2 append success next 1 match 0
+070308 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+070308 LEAD S1: 0 append success next 1 match 0
+071310 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+071310 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+071311 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+071311 LEAD S1: 2 append success next 1 match 0
+071311 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+071312 LEAD S1: 0 append success next 1 match 0
+072313 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+072313 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+072314 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+072314 LEAD S1: 2 append success next 1 match 0
+072315 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+072315 LEAD S1: 0 append success next 1 match 0
+073318 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+073318 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+073321 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+073322 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+073322 LEAD S1: 2 append success next 1 match 0
+073324 LEAD S1: 0 append success next 1 match 0
+074325 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+074326 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+074327 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+074328 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+074328 LEAD S1: 2 append success next 1 match 0
+074329 LEAD S1: 0 append success next 1 match 0
+075328 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+075328 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+075329 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+075329 LEAD S1: 2 append success next 1 match 0
+075329 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+075330 LEAD S1: 0 append success next 1 match 0
+076331 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+076331 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+076332 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+076333 LEAD S1: 2 append success next 1 match 0
+076333 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+076333 LEAD S1: 0 append success next 1 match 0
+077335 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+077335 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+077336 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+077336 LEAD S1: 2 append success next 1 match 0
+077337 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+077337 LEAD S1: 0 append success next 1 match 0
+078338 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+078338 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+078339 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+078339 LEAD S1: 2 append success next 1 match 0
+078340 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+078340 LEAD S1: 0 append success next 1 match 0
+079342 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+079342 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+079343 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+079344 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+079344 LEAD S1: 2 append success next 1 match 0
+079344 LEAD S1: 0 append success next 1 match 0
+080346 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+080347 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+080347 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+080348 LEAD S1: 2 append success next 1 match 0
+080348 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+080348 LEAD S1: 0 append success next 1 match 0
+081349 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+081350 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+081350 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+081351 LEAD S1: 2 append success next 1 match 0
+081351 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+081351 LEAD S1: 0 append success next 1 match 0
+082352 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+082352 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+082353 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+082353 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+082354 LEAD S1: 2 append success next 1 match 0
+082354 LEAD S1: 0 append success next 1 match 0
+083355 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+083356 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+083356 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+083357 LEAD S1: 2 append success next 1 match 0
+083357 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+083357 LEAD S1: 0 append success next 1 match 0
+084360 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+084360 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+084361 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+084361 LEAD S1: 2 append success next 1 match 0
+084361 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+084362 LEAD S1: 0 append success next 1 match 0
+085363 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+085363 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+085364 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+085364 LEAD S1: 2 append success next 1 match 0
+085364 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+085365 LEAD S1: 0 append success next 1 match 0
+086369 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+086369 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+086370 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+086370 LEAD S1: 2 append success next 1 match 0
+086370 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+086371 LEAD S1: 0 append success next 1 match 0
+087374 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+087374 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+087376 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+087377 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+087378 LEAD S1: 2 append success next 1 match 0
+087379 LEAD S1: 0 append success next 1 match 0
+088378 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+088379 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+088380 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+088381 LEAD S1: 2 append success next 1 match 0
+088382 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+088383 LEAD S1: 0 append success next 1 match 0
+089384 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+089385 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+089387 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+089388 LEAD S1: 2 append success next 1 match 0
+089389 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+089389 LEAD S1: 0 append success next 1 match 0
+090388 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+090388 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+090389 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+090389 LEAD S1: 2 append success next 1 match 0
+090390 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+090390 LEAD S1: 0 append success next 1 match 0
+091391 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+091391 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+091392 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+091393 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+091393 LEAD S1: 2 append success next 1 match 0
+091393 LEAD S1: 0 append success next 1 match 0
+092395 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+092396 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+092398 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+092398 LEAD S1: 2 append success next 1 match 0
+092399 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+092400 LEAD S1: 0 append success next 1 match 0
+093399 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+093400 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+093400 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+093401 LEAD S1: 2 append success next 1 match 0
+093401 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+093402 LEAD S1: 0 append success next 1 match 0
+094403 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+094403 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+094404 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+094404 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+094404 LEAD S1: 2 append success next 1 match 0
+094404 LEAD S1: 0 append success next 1 match 0
+095406 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+095406 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+095407 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+095407 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+095408 LEAD S1: 0 append success next 1 match 0
+095408 LEAD S1: 2 append success next 1 match 0
+096411 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+096411 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+096412 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+096412 LEAD S1: 2 append success next 1 match 0
+096413 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+096413 LEAD S1: 0 append success next 1 match 0
+097415 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+097415 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+097416 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+097417 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+097417 LEAD S1: 2 append success next 1 match 0
+097418 LEAD S1: 0 append success next 1 match 0
+098420 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+098420 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+098421 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+098421 LEAD S1: 2 append success next 1 match 0
+098421 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+098422 LEAD S1: 0 append success next 1 match 0
+099426 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+099426 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+099427 INFO S2: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+099427 LEAD S1: 2 append success next 1 match 0
+099428 INFO S0: (term 1) follower 收到 [1] AppendEntries [], prevIndex 0, prevTerm 0
+099428 LEAD S1: 0 append success next 1 match 0
+100430 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+100430 LEAD S1: prevLog &raft.Entry{Command:interface {}(nil), Term:0, Index:0}
+--- FAIL: TestPersist12C (10.04s)
+    config.go:609: one(11) failed to reach agreement
+FAIL
+exit status 1
+FAIL	6.824/raft	10.044s

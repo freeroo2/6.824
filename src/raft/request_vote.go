@@ -28,6 +28,33 @@ type RequestVoteReply struct {
 // example RequestVote RPC handler.
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	// Your code here (2A, 2B).
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	// logger.PrettyDebug(logger.DVote, "S%d: receive a RequestVote from %v, args term %v, rf.currentTerm %v", rf.me, args.CandidateId, args.Term, rf.currentTerm)
+	// rules for servers
+	// all servers 2
+	if args.Term > rf.currentTerm {
+		rf.setNewTerm(args.Term)
+	}
+	// request vote rpc receiver 1
+	if args.Term < rf.currentTerm {
+		reply.Term = rf.currentTerm
+		reply.VoteGranted = false
+		return
+	}
+	// request vote rpc receiver 2
+	myLastLog := rf.log.lastLog()
+	upToDate := args.LastLogTerm > myLastLog.Term || (args.LastLogTerm == myLastLog.Term && args.LastLogIndex >= myLastLog.Index)
+	if (rf.votedFor == -1 || rf.votedFor == args.CandidateId) && upToDate {
+		reply.VoteGranted = true
+		rf.votedFor = args.CandidateId
+		rf.ResetElectionTimeOut()
+		logger.PrettyDebug(logger.DVote, "S%v: term %v vote %v", rf.me, rf.currentTerm, rf.votedFor)
+	} else {
+		reply.VoteGranted = false
+	}
+	// after update
+	reply.Term = rf.currentTerm
 }
 
 // example code to send a RequestVote RPC to a server.
@@ -63,29 +90,41 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 }
 
 func (rf *Raft) candidateRequestVote(serverID int, args *RequestVoteArgs, votesCount *int64, becomesLeader *sync.Once) {
+	logger.PrettyDebug(logger.DVote, "S%d: term %v send vote request to %d", rf.me, args.Term, serverID)
 	var reply RequestVoteReply
 	ok := rf.sendRequestVote(serverID, args, &reply)
 	if !ok {
 		return
 	}
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
 	if reply.Term > args.Term {
+		logger.PrettyDebug(logger.DVote, "S%d: %d 在新的term，更新term，结束", rf.me, serverID)
 		rf.setNewTerm(reply.Term)
 		return
 	}
 	if reply.Term < args.Term {
+		logger.PrettyDebug(logger.DVote, "S%d: %d 的term %d 已经失效，结束\n", rf.me, serverID, reply.Term)
 		return
 	}
+	if !reply.VoteGranted {
+		logger.PrettyDebug(logger.DVote, "S%d: %d 没有投给me，结束\n", rf.me, serverID)
+		return
+	}
+
+	logger.PrettyDebug(logger.DVote, "S%d: reply from %d, term一致，且投给%d", rf.me, serverID, rf.me)
 	atomic.AddInt64(votesCount, 1)
 	n := len(rf.peers)
-	if *votesCount > int64(n/2) {
+	if *votesCount > int64(n/2) && args.Term == rf.currentTerm && rf.status == CANDIDATE {
 		becomesLeader.Do(func() {
+
 			rf.status = LEADER
-			logger.PrettyDebug(logger.DLeader, "S%d, come to power, start to send heartbeat", rf.me)
-			//rf.ResetElectionTimeOut()
+			logger.PrettyDebug(logger.DLeader, "S%d: come to power, start to send heartbeat", rf.me)
 			for i := 0; i < n; i++ {
 				rf.nextIndex[i] = rf.log.lastLog().Index + 1
 				rf.matchIndex[i] = 0
 			}
+			// logger.PrettyDebug(logger.DLeader, "S%d: leader - nextIndex %#v", rf.me, rf.nextIndex)
 			rf.leaderAppendEntries(true)
 		})
 	}

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # VERBOSE=1 go test -run TestInitialElection2A | python3  ../scripts/dslogs.py  -c 3
 # VERBOSE=1 go test -run TestInitialElection2A > output.log | python3 ../scripts/dslogs.py output.log
 import sys
@@ -30,6 +30,7 @@ TOPICS = {
     "WARN": "#d08341",
     "ERRO": "#fe2626",
     "TRCE": "#fe2626",
+    "COFT": "#F7D060",
 }
 # fmt: on
 

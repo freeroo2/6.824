@@ -3,7 +3,6 @@ package raft
 import (
 	"fmt"
 	"strings"
-	"sync"
 )
 
 type Entry struct {
@@ -13,13 +12,10 @@ type Entry struct {
 }
 
 type Log struct {
-	sync.Mutex
 	Entries []*Entry
 }
 
 func (log *Log) lastLog() *Entry {
-	log.Lock()
-	defer log.Unlock()
 	length := len(log.Entries)
 	if length <= 0 {
 		return nil
@@ -29,14 +25,10 @@ func (log *Log) lastLog() *Entry {
 }
 
 func (log *Log) append(e ...*Entry) {
-	log.Lock()
-	defer log.Unlock()
 	log.Entries = append(log.Entries, e...)
 }
 
 func (log *Log) at(index int) *Entry {
-	log.Lock()
-	defer log.Unlock()
 	length := len(log.Entries)
 	if index < 0 || index >= length {
 		return nil
@@ -45,9 +37,14 @@ func (log *Log) at(index int) *Entry {
 }
 
 func (log *Log) slice(index int) []*Entry {
-	log.Lock()
-	defer log.Unlock()
 	return log.Entries[index:]
+}
+
+func (log *Log) truncate(index int) {
+	if index <= 0 || index >= len(log.Entries) {
+		return
+	}
+	log.Entries = log.Entries[:index]
 }
 
 func (e *Entry) String() string {
