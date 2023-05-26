@@ -1,6 +1,8 @@
 package raft
 
-import "6.824/logger"
+import (
+	"6.824/logger"
+)
 
 type AppendEntriesArgs struct {
 	// Your data here (2A, 2B).
@@ -14,12 +16,13 @@ type AppendEntriesArgs struct {
 
 type AppendEntriesReply struct {
 	// Your data here (2A).
-	Term     int
-	Success  bool
-	Conflict bool
-	Xindex   int
-	Xterm    int
-	Xlen     int
+	Term         int
+	Success      bool
+	Conflict     bool
+	Xindex       int
+	Xterm        int
+	Xlen         int
+	SnapshotMiss bool
 }
 
 // example AppendEntries RPC handler.
@@ -27,7 +30,11 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	// Your code here (2A, 2B).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	logger.PrettyDebug(logger.DInfo, "S%d: (term %d) follower 收到 [%v] AppendEntries %v, prevIndex %v, prevTerm %v", rf.me, rf.currentTerm, args.LeaderId, args.Entries, args.PrevLogIndex, args.PrevLogTerm)
+
+	// for debug
+	cmds := EntriesToString(args.Entries)
+	logger.PrettyDebug(logger.DInfo, "S%d: (term %d) follower 收到 [%v] AppendEntries %v, prevIndex %v, prevTerm %v", rf.me, rf.currentTerm, args.LeaderId, cmds, args.PrevLogIndex, args.PrevLogTerm)
+
 	reply.Success = false
 	// rules for servers
 	// all servers 2
@@ -46,16 +53,23 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		rf.status = FOLLOWER
 
 	}
+	// 自身的快照Index比发过来的prevLogIndex还大
+	if rf.lastIncludeIndex > args.PrevLogIndex {
+		reply.SnapshotMiss = true
+		reply.Xindex = rf.lastIncludeIndex
+		return
+	}
 	// appendentries rpc 2
-	prevLog := rf.log.at(args.PrevLogIndex)
-	if rf.log.lastLog().Index < args.PrevLogIndex {
+	prevLog := rf.at(args.PrevLogIndex)
+	if rf.getLogLastIndex() < args.PrevLogIndex {
 		reply.Conflict = true
 		reply.Xindex = -1
 		reply.Xterm = -1
-		reply.Xlen = len(rf.log.Entries)
-		logger.PrettyDebug(logger.DConflict, "S%v: Conflict Xterm %v, Xindex %v, Xlen %v", rf.me, reply.Xterm, reply.Xindex, reply.Xlen)
+		reply.Xlen = len(rf.log)
+		logger.PrettyDebug(logger.DConflict, "S%v: here Conflict Xterm %v, Xindex %v, Xlen %v, rf.logs: %v", rf.me, reply.Xterm, reply.Xindex, reply.Xlen, rf.LogToString())
 		return
 	}
+	logger.PrettyDebug(logger.DSnap, "S%v: prevLog %#v", rf.me, prevLog)
 	if prevLog.Term != args.PrevLogTerm {
 		reply.Conflict = true
 		xterm := prevLog.Term
@@ -65,27 +79,30 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		// and then search its log for the first index whose entry has term equal to conflictTerm.
 		// here, conflictTerm = reply.Xterm
 		for xindex := args.PrevLogIndex; xindex > 0; xindex-- {
-			if rf.log.at(xindex-1).Term != xterm {
+			if rf.at(xindex-1).Term != xterm {
 				reply.Xindex = xindex
 				break
 			}
 		}
 		reply.Xterm = xterm
-		reply.Xlen = len(rf.log.Entries)
+		reply.Xlen = len(rf.log)
 		logger.PrettyDebug(logger.DConflict, "S%v: Conflict Xterm %v, Xindex %v, Xlen %v", rf.me, reply.Xterm, reply.Xindex, reply.Xlen)
 		return
 	}
 	for index, entry := range args.Entries {
 		// append entries rpc 3
 		//logger.PrettyDebug(logger.DInfo, "S%d: index=%d, rf.log.lastLog().Index=%d, entry.Term=%d, rf.log.at(entry.Index).Term=%d", rf.me, index, rf.log.lastLog().Index, entry.Term, rf.log.at(entry.Index).Term)
-		if entry.Index <= rf.log.lastLog().Index && entry.Term != rf.log.at(entry.Index).Term {
-			rf.log.truncate(entry.Index)
+		if entry.Index <= rf.getLogLastIndex() && entry.Term != rf.at(entry.Index).Term {
+			rf.truncate(entry.Index)
+			rf.persist()
 			logger.PrettyDebug(logger.DInfo, "S%d: follower remove slice from Index %v", rf.me, index)
 		}
 		// append entries rpc 4
-		if entry.Index > rf.log.lastLog().Index {
-			rf.log.append(args.Entries[index:]...)
-			logger.PrettyDebug(logger.DInfo, "S%d: follower append [%v]", rf.me, args.Entries[index:])
+		if entry.Index > rf.getLogLastIndex() {
+			rf.append(args.Entries[index:]...)
+			rf.persist()
+			// cmds := EntriesCmdToString(args.Entries[index:])
+			logger.PrettyDebug(logger.DInfo, "S%d: follower append [%v]", rf.me, rf.LogToString())
 			break
 		}
 	}
@@ -101,7 +118,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	if args.LeaderCommit > rf.commitIndex {
 		// why rf.log.lastLog().Index?
 		// Because if appended entries at the above, the lastLog is exactly the last new entry
-		rf.commitIndex = Min(args.LeaderCommit, rf.log.lastLog().Index)
+		rf.commitIndex = Min(args.LeaderCommit, rf.getLogLastIndex())
 		rf.apply()
 	}
 	reply.Success = true
@@ -113,32 +130,44 @@ func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *Ap
 }
 
 func (rf *Raft) leaderAppendEntries(isHeartbeat bool) {
-	lastLog := rf.log.lastLog()
 	for peerID, _ := range rf.peers {
 		if peerID == rf.me {
 			rf.ResetElectionTimeOut()
 			continue
 		}
 		// rules for leader 3
-		if lastLog.Index >= rf.nextIndex[peerID] || isHeartbeat {
+		if rf.getLogLastIndex() >= rf.nextIndex[peerID] || isHeartbeat {
 			nextIndex := rf.nextIndex[peerID]
 			if nextIndex <= 0 {
 				nextIndex = 1
 			}
-			if lastLog.Index+1 < nextIndex {
-				nextIndex = lastLog.Index
+			logger.PrettyDebug(logger.DSnap, "S%v: -> S%v, next %v, rf.lastIncludeIndex %v", rf.me, peerID, nextIndex, rf.lastIncludeIndex)
+			if nextIndex <= rf.lastIncludeIndex {
+				logger.PrettyDebug(logger.DSnap, "S%v: enter leaderSendSnapshot to S%v", rf.me, peerID)
+				go rf.leaderSendSnapshot(peerID)
+				continue
 			}
-			prevLog := rf.log.at(nextIndex - 1)
-			// logger.PrettyDebug(logger.DLeader, "S%v: prevLog %#v", rf.me, prevLog)
+			if rf.getLogLastIndex()+1 < nextIndex {
+				// 只有哨兵entry
+				// nextIndex = rf.lastIncludeIndex + 1
+				nextIndex = rf.getLogLastIndex()
+			}
+			prevLog := rf.at(nextIndex - 1)
+			// logger.PrettyDebug(logger.DSnap, "S%v: -> S%v, next = %v", rf.me, peerID, nextIndex)
 			args := AppendEntriesArgs{
 				Term:         rf.currentTerm,
 				LeaderId:     rf.me,
 				PrevLogIndex: prevLog.Index,
 				PrevLogTerm:  prevLog.Term,
 				LeaderCommit: rf.commitIndex,
-				Entries:      make([]*Entry, lastLog.Index-nextIndex+1),
+				Entries:      make([]*Entry, rf.getLogLastIndex()-nextIndex+1),
 			}
-			copy(args.Entries, rf.log.slice(nextIndex))
+			//
+			if rf.lastIncludeIndex > 0 && prevLog.Index == 0 {
+				args.PrevLogIndex = rf.lastIncludeIndex
+				args.PrevLogTerm = rf.lastIncludeTerm
+			}
+			copy(args.Entries, rf.slice(nextIndex))
 			go rf.leaderSendEntries(peerID, &args)
 		}
 	}
@@ -162,8 +191,6 @@ func (rf *Raft) leaderSendEntries(serverID int, args *AppendEntriesArgs) {
 			next := match + 1
 			rf.nextIndex[serverID] = Max(rf.nextIndex[serverID], next)
 			rf.matchIndex[serverID] = Max(rf.matchIndex[serverID], match)
-			// rf.matchIndex[serverID] = Max(rf.matchIndex[serverID], args.PrevLogIndex+len(args.Entries))
-			// rf.nextIndex[serverID] = Max(rf.nextIndex[serverID], args.PrevLogIndex+len(args.Entries)+1)
 			logger.PrettyDebug(logger.DLeader, "S%v: S%v append success next %v match %v", rf.me, serverID, rf.nextIndex[serverID], rf.matchIndex[serverID])
 		} else if reply.Conflict {
 			logger.PrettyDebug(logger.DLeader, "S%v: Conflict from %v %#v", rf.me, serverID, reply)
@@ -176,13 +203,16 @@ func (rf *Raft) leaderSendEntries(serverID int, args *AppendEntriesArgs) {
 				// If it does not find an entry with that term, it should set nextIndex = conflictIndex.
 				lastLogInXTerm := rf.findLastLogInTerm(reply.Xterm)
 				logger.PrettyDebug(logger.DLeader, "S%v: lastLogInXTerm %v", rf.me, lastLogInXTerm)
-				if lastLogInXTerm != -1 {
+				if lastLogInXTerm > 0 {
 					rf.nextIndex[serverID] = lastLogInXTerm + 1 // todo
 				} else {
 					rf.nextIndex[serverID] = reply.Xindex
 				}
 			}
 			logger.PrettyDebug(logger.DLeader, "S%v: after compute, leader nextIndex[%v] %v", rf.me, serverID, rf.nextIndex[serverID])
+		} else if reply.SnapshotMiss {
+			rf.nextIndex[serverID] = reply.Xindex + 1
+			logger.PrettyDebug(logger.DLeader, "S%v: nextIndex[%v]++, becomes %v", rf.me, serverID, rf.nextIndex[serverID])
 		} else if rf.nextIndex[serverID] > 1 {
 			rf.nextIndex[serverID]--
 			logger.PrettyDebug(logger.DLeader, "S%v: nextIndex[%v]--, becomes %v", rf.me, serverID, rf.nextIndex[serverID])
@@ -197,17 +227,18 @@ func (rf *Raft) leaderCommitRule() {
 		return
 	}
 
-	for n := rf.commitIndex + 1; n <= rf.log.lastLog().Index; n++ {
-		if rf.log.at(n).Term == rf.currentTerm {
-			count := 0
+	//todo
+	for n := rf.commitIndex + 1; n <= rf.getLogLastIndex(); n++ {
+		if rf.at(n).Term == rf.currentTerm {
+			count := 1
 			for i, _ := range rf.peers {
 				if i != rf.me && rf.matchIndex[i] >= n {
 					count++
 				}
 			}
-			if count > len(rf.peers) / 2 {
+			if count > len(rf.peers)/2 {
 				rf.commitIndex = n
-				logger.PrettyDebug(logger.DLeader, "S%v: leader尝试提交 index %v", rf.me, rf.commitIndex)
+				//logger.PrettyDebug(logger.DLeader, "S%v: leader尝试提交 index %v", rf.me, rf.commitIndex)
 				rf.apply()
 				break
 			}
@@ -216,8 +247,8 @@ func (rf *Raft) leaderCommitRule() {
 }
 
 func (rf *Raft) findLastLogInTerm(term int) int {
-	for i := rf.log.lastLog().Index; i > 0; i-- {
-		t := rf.log.at(i).Term
+	for i := rf.getLogLastIndex(); i > rf.lastIncludeIndex; i-- {
+		t := rf.at(i).Term
 		if t == term {
 			return i
 		} else if t < term {

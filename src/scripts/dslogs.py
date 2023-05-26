@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# VERBOSE=1 go test -run TestInitialElection2A | python3  ../scripts/dslogs.py  -c 3
+# VERBOSE=1 go test -run TestPersist32C | python3  ../scripts/dslogs.py  -c 3
 # VERBOSE=1 go test -run TestInitialElection2A > output.log | python3 ../scripts/dslogs.py output.log
 import sys
 import shutil

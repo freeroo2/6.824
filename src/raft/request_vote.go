@@ -43,11 +43,12 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		return
 	}
 	// request vote rpc receiver 2
-	myLastLog := rf.log.lastLog()
+	myLastLog := rf.lastLog()
 	upToDate := args.LastLogTerm > myLastLog.Term || (args.LastLogTerm == myLastLog.Term && args.LastLogIndex >= myLastLog.Index)
 	if (rf.votedFor == -1 || rf.votedFor == args.CandidateId) && upToDate {
 		reply.VoteGranted = true
 		rf.votedFor = args.CandidateId
+		rf.persist()
 		rf.ResetElectionTimeOut()
 		logger.PrettyDebug(logger.DVote, "S%v: term %v vote %v", rf.me, rf.currentTerm, rf.votedFor)
 	} else {
@@ -121,7 +122,7 @@ func (rf *Raft) candidateRequestVote(serverID int, args *RequestVoteArgs, votesC
 			rf.status = LEADER
 			logger.PrettyDebug(logger.DLeader, "S%d: come to power, start to send heartbeat", rf.me)
 			for i := 0; i < n; i++ {
-				rf.nextIndex[i] = rf.log.lastLog().Index + 1
+				rf.nextIndex[i] = rf.getLogLastIndex() + 1
 				rf.matchIndex[i] = 0
 			}
 			// logger.PrettyDebug(logger.DLeader, "S%d: leader - nextIndex %#v", rf.me, rf.nextIndex)

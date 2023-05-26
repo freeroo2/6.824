@@ -11,6 +11,7 @@ func (rf *Raft) setNewTerm(newTerm int) {
 		rf.currentTerm = newTerm
 		rf.status = FOLLOWER
 		rf.votedFor = -1
+		rf.persist()
 		logger.PrettyDebug(logger.DTerm, "S%d: set new term %d", rf.me, newTerm)
 	}
 }
@@ -19,10 +20,11 @@ func (rf *Raft) leaderElection() {
 	rf.currentTerm++
 	rf.status = CANDIDATE
 	rf.votedFor = rf.me
+	rf.persist()
 	rf.ResetElectionTimeOut()
 	var votesCount int64
 	votesCount = 1
-	lastlog := rf.log.lastLog()
+	lastlog := rf.lastLog()
 	logger.PrettyDebug(logger.DInfo, "S%v: start leader election, term %d", rf.me, rf.currentTerm)
 	args := RequestVoteArgs{
 		Term:         rf.currentTerm,

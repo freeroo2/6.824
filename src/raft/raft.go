@@ -20,6 +20,7 @@ package raft
 import (
 	//	"bytes"
 
+	"bytes"
 	"fmt"
 	"strings"
 	"sync"
@@ -27,6 +28,7 @@ import (
 	"time"
 
 	//	"6.824/labgob"
+	"6.824/labgob"
 	"6.824/labrpc"
 	"6.824/logger"
 )
@@ -71,18 +73,21 @@ type Raft struct {
 	// Your data here (2A, 2B, 2C).
 	// Look at the paper's Figure 2 for a description of what
 	// state a Raft server must maintain.
-	status          PeerStatus
-	heartBeat       time.Duration
-	electionTimeOut time.Time
-	currentTerm     int
-	votedFor        int
-	log             *Log  // first index is 1
-	commitIndex     int   // initialized to 0
-	lastApplied     int   // initialized to 0
-	nextIndex       []int // initialized to leader last log index + 1
-	matchIndex      []int // initialized to 0
-	applyCh         chan ApplyMsg
-	applyCond       *sync.Cond
+	status           PeerStatus
+	heartBeat        time.Duration
+	electionTimeOut  time.Time
+	currentTerm      int
+	votedFor         int
+	log              []*Entry // first index is 1
+	commitIndex      int      // initialized to 0
+	lastApplied      int      // initialized to 0
+	nextIndex        []int    // initialized to leader last log index + 1
+	matchIndex       []int    // initialized to 0
+	applyCh          chan ApplyMsg
+	applyCond        *sync.Cond
+	lastIncludeIndex int
+	lastIncludeTerm  int
+	snapshot         []byte
 }
 
 // return currentTerm and whether this server
@@ -103,13 +108,28 @@ func (rf *Raft) GetState() (int, bool) {
 // see paper's Figure 2 for a description of what should be persistent.
 func (rf *Raft) persist() {
 	// Your code here (2C).
-	// Example:
-	// w := new(bytes.Buffer)
-	// e := labgob.NewEncoder(w)
-	// e.Encode(rf.xxx)
-	// e.Encode(rf.yyy)
-	// data := w.Bytes()
-	// rf.persister.SaveRaftState(data)
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(rf.currentTerm)
+	e.Encode(rf.votedFor)
+	e.Encode(rf.log)
+	e.Encode(rf.lastIncludeIndex)
+	e.Encode(rf.lastIncludeTerm)
+	logger.PrettyDebug(logger.DPersist, "S%d: log to persist: %v", rf.me, rf.LogToString())
+	data := w.Bytes()
+	rf.persister.SaveRaftState(data)
+}
+
+func (rf *Raft) persistData() []byte {
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(rf.currentTerm)
+	e.Encode(rf.votedFor)
+	e.Encode(rf.log)
+	e.Encode(rf.lastIncludeIndex)
+	e.Encode(rf.lastIncludeTerm)
+	data := w.Bytes()
+	return data
 }
 
 // restore previously persisted state.
@@ -119,35 +139,28 @@ func (rf *Raft) readPersist(data []byte) {
 	}
 	// Your code here (2C).
 	// Example:
-	// r := bytes.NewBuffer(data)
-	// d := labgob.NewDecoder(r)
-	// var xxx
-	// var yyy
-	// if d.Decode(&xxx) != nil ||
-	//    d.Decode(&yyy) != nil {
-	//   error...
-	// } else {
-	//   rf.xxx = xxx
-	//   rf.yyy = yyy
-	// }
-}
+	r := bytes.NewBuffer(data)
+	d := labgob.NewDecoder(r)
+	var currentTerm int
+	var votedFor int
+	var log []*Entry
+	var lastIncludeIndex int
+	var lastIncludeTerm int
+	if d.Decode(&currentTerm) != nil ||
+		d.Decode(&votedFor) != nil ||
+		d.Decode(&log) != nil ||
+		d.Decode(&lastIncludeIndex) != nil ||
+		d.Decode(&lastIncludeTerm) != nil {
+		// error...
+		logger.PrettyDebug(logger.DError, "S%v: readPersist error", rf.me)
 
-// A service wants to switch to snapshot.  Only do so if Raft hasn't
-// have more recent info since it communicate the snapshot on applyCh.
-func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool {
-
-	// Your code here (2D).
-
-	return true
-}
-
-// the service says it has created a snapshot that has
-// all info up to and including index. this means the
-// service no longer needs the log through (and including)
-// that index. Raft should now trim its log as much as possible.
-func (rf *Raft) Snapshot(index int, snapshot []byte) {
-	// Your code here (2D).
-
+	} else {
+		rf.currentTerm = currentTerm
+		rf.votedFor = votedFor
+		rf.log = log
+		rf.lastIncludeIndex = lastIncludeIndex
+		rf.lastIncludeTerm = lastIncludeTerm
+	}
 }
 
 // the service using Raft (e.g. a k/v server) wants to start
@@ -171,7 +184,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	if rf.status == LEADER {
-		index = rf.log.lastLog().Index + 1
+		index = rf.getLogLastIndex() + 1
 		term = rf.currentTerm
 		isLeader = true
 		entry := &Entry{
@@ -179,7 +192,8 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 			Term:    term,
 			Index:   index,
 		}
-		rf.log.append(entry)
+		rf.append(entry)
+		rf.persist()
 		logger.PrettyDebug(logger.DLeader, "S%v: leader append entries %#v", rf.me, entry)
 		rf.leaderAppendEntries(false)
 		return index, term, isLeader
@@ -248,10 +262,11 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.peers = peers
 	rf.persister = persister
 	rf.me = me
-
+	logger.PrettyDebug(logger.DInfo, "S%d: enter Make", rf.me)
 	// Your initialization code here (2A, 2B, 2C).
-	rf.log = &Log{Entries: make([]*Entry, 0)}
-	rf.log.append(&Entry{
+	rf.mu.Lock()
+	rf.log = make([]*Entry, 0)
+	rf.append(&Entry{
 		Command: -1,
 		Term:    0,
 		Index:   0,
@@ -266,10 +281,17 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.applyCh = applyCh
 	rf.heartBeat = 100 * time.Millisecond
 	rf.applyCond = sync.NewCond(&rf.mu)
+	rf.lastIncludeIndex = 0
+	rf.lastIncludeTerm = 0
 	rf.ResetElectionTimeOut()
+	rf.mu.Unlock()
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
-
+	logger.PrettyDebug(logger.DPersist, "S%d: log from readPersist: %v", rf.me, rf.LogToString())
+	// 同步快照信息
+	if rf.lastIncludeIndex > 0 {
+		rf.lastApplied = rf.lastIncludeIndex
+	}
 	// start ticker goroutine to start elections
 	go rf.ticker()
 	// logger.PrettyDebug(logger.DLog, "S%d, after make", rf.me)
@@ -279,7 +301,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 func (rf *Raft) apply() {
 	rf.applyCond.Broadcast()
-	logger.PrettyDebug(logger.DCommit, "S%d, rf.applyCond.Broadcast()", rf.me)
+	//logger.PrettyDebug(logger.DCommit, "S%d, rf.applyCond.Broadcast()", rf.me)
 }
 
 func (rf *Raft) applier() {
@@ -287,28 +309,29 @@ func (rf *Raft) applier() {
 	defer rf.mu.Unlock()
 	// all servers rule 1
 	for !rf.killed() {
-		if rf.commitIndex > rf.lastApplied && rf.log.lastLog().Index > rf.lastApplied {
+		if rf.commitIndex > rf.lastApplied && rf.getLogLastIndex() > rf.lastApplied {
 			rf.lastApplied++
 			applyMsg := ApplyMsg{
 				CommandValid: true,
 				CommandIndex: rf.lastApplied,
-				Command:      rf.log.at(rf.lastApplied).Command,
+				Command:      rf.at(rf.lastApplied).Command,
 			}
-			logger.PrettyDebug(logger.DCommit, "S%d, COMMIT %d: %v", rf.me, rf.lastApplied, rf.commits())
+			// logger.PrettyDebug(logger.DCommit, "S%d, COMMIT %d: %v", rf.me, rf.lastApplied, rf.commits())
 			rf.mu.Unlock()
 			rf.applyCh <- applyMsg
 			rf.mu.Lock()
 		} else {
 			rf.applyCond.Wait()
-			logger.PrettyDebug(logger.DCommit, "S%d, rf.applyCond.Wait()", rf.me)
+			//logger.PrettyDebug(logger.DCommit, "S%d, rf.applyCond.Wait()", rf.me)
 		}
 	}
 }
 
+// todo
 func (rf *Raft) commits() string {
 	nums := []string{}
 	for i := 0; i <= rf.lastApplied; i++ {
-		nums = append(nums, fmt.Sprintf("%4d", rf.log.at(i).Command))
+		nums = append(nums, fmt.Sprintf("%4d", rf.at(i).Command))
 	}
 	return fmt.Sprint(strings.Join(nums, "|"))
 }

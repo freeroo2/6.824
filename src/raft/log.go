@@ -11,50 +11,65 @@ type Entry struct {
 	Index   int
 }
 
-type Log struct {
-	Entries []*Entry
-}
-
-func (log *Log) lastLog() *Entry {
-	length := len(log.Entries)
+func (rf *Raft) lastLog() *Entry {
+	length := len(rf.log)
 	if length <= 0 {
 		return nil
 	}
-	return log.Entries[length-1]
+	return rf.log[length-1]
 
 }
 
-func (log *Log) append(e ...*Entry) {
-	log.Entries = append(log.Entries, e...)
+func (rf *Raft) getLogLastIndex() int {
+	return len(rf.log) - 1 + rf.lastIncludeIndex
 }
 
-func (log *Log) at(index int) *Entry {
-	length := len(log.Entries)
-	if index < 0 || index >= length {
+func (rf *Raft) getLogLastTerm() int {
+	if len(rf.log)-1 == 0 {
+		return rf.lastIncludeTerm
+	}
+	return rf.lastLog().Term
+}
+
+func (rf *Raft) append(e ...*Entry) {
+	rf.log = append(rf.log, e...)
+}
+
+// calculate with lastIncludeIndex
+func (rf *Raft) at(index int) *Entry {
+	calIndex := index - rf.lastIncludeIndex
+	length := len(rf.log)
+	if calIndex < 0 || calIndex >= length {
 		return nil
 	}
-	return log.Entries[index]
+	return rf.log[calIndex]
 }
 
-func (log *Log) slice(index int) []*Entry {
-	return log.Entries[index:]
+func (rf *Raft) slice(index int) []*Entry {
+	calIndex := index - rf.lastIncludeIndex
+	length := len(rf.log)
+	if calIndex < 0 || calIndex >= length {
+		return nil
+	}
+	return rf.log[calIndex:]
 }
 
-func (log *Log) truncate(index int) {
-	if index <= 0 || index >= len(log.Entries) {
+func (rf *Raft) truncate(index int) {
+	calIndex := index - rf.lastIncludeIndex
+	if calIndex <= 0 || calIndex >= len(rf.log) {
 		return
 	}
-	log.Entries = log.Entries[:index]
+	rf.log = rf.log[:calIndex]
 }
 
 func (e *Entry) String() string {
 	return fmt.Sprint(e.Term)
 }
 
-func (log *Log) String() string {
+func (rf *Raft) LogToString() string {
 	nums := []string{}
-	for _, entry := range log.Entries {
-		nums = append(nums, fmt.Sprintf("%4d", entry.Term))
+	for _, entry := range rf.log {
+		nums = append(nums, fmt.Sprintf("%4d", entry.Index))
 	}
 	return fmt.Sprint(strings.Join(nums, "|"))
 }

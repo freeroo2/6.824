@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+# ../scripts/dstest.py 2A -p 16 -n 100 -v 1
 import itertools
 import math
 import signal
