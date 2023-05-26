@@ -78,7 +78,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		// it should return conflictTerm = log[prevLogIndex].Term,
 		// and then search its log for the first index whose entry has term equal to conflictTerm.
 		// here, conflictTerm = reply.Xterm
-		for xindex := args.PrevLogIndex; xindex > 0; xindex-- {
+		for xindex := args.PrevLogIndex; xindex > rf.lastIncludeIndex; xindex-- {
 			if rf.at(xindex-1).Term != xterm {
 				reply.Xindex = xindex
 				break
@@ -148,8 +148,6 @@ func (rf *Raft) leaderAppendEntries(isHeartbeat bool) {
 				continue
 			}
 			if rf.getLogLastIndex()+1 < nextIndex {
-				// 只有哨兵entry
-				// nextIndex = rf.lastIncludeIndex + 1
 				nextIndex = rf.getLogLastIndex()
 			}
 			prevLog := rf.at(nextIndex - 1)
@@ -164,6 +162,7 @@ func (rf *Raft) leaderAppendEntries(isHeartbeat bool) {
 			}
 			//
 			if rf.lastIncludeIndex > 0 && prevLog.Index == 0 {
+				// 只有哨兵entry
 				args.PrevLogIndex = rf.lastIncludeIndex
 				args.PrevLogTerm = rf.lastIncludeTerm
 			}
@@ -228,7 +227,8 @@ func (rf *Raft) leaderCommitRule() {
 	}
 
 	//todo
-	for n := rf.commitIndex + 1; n <= rf.getLogLastIndex(); n++ {
+	index := Max(rf.commitIndex+1, rf.lastIncludeIndex+1)
+	for n := index; n <= rf.getLogLastIndex(); n++ {
 		if rf.at(n).Term == rf.currentTerm {
 			count := 1
 			for i, _ := range rf.peers {
