@@ -1,9 +1,19 @@
 package kvraft
 
+import "6.824/raft"
+
 const (
 	OK             = "OK"
 	ErrNoKey       = "ErrNoKey"
 	ErrWrongLeader = "ErrWrongLeader"
+)
+
+type OpType int32
+
+const (
+	PUT    OpType = 0
+	GET    OpType = 1
+	APPEND OpType = 2
 )
 
 type Err string
@@ -16,6 +26,9 @@ type PutAppendArgs struct {
 	// You'll have to add definitions here.
 	// Field names must start with capital letters,
 	// otherwise RPC will break.
+	Typ       OpType
+	ClientID  int64
+	RequestID int
 }
 
 type PutAppendReply struct {
@@ -25,9 +38,17 @@ type PutAppendReply struct {
 type GetArgs struct {
 	Key string
 	// You'll have to add definitions here.
+	Typ       OpType
+	ClientID  int64
+	RequestID int
 }
 
 type GetReply struct {
 	Err   Err
 	Value string
+}
+
+type ResultMsg struct {
+	ApplyMsgFromRaft raft.ApplyMsg
+	ResultStr        string
 }
